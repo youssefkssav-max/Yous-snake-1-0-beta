@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#101827">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="description" content="Yous Snake - لعبة الثعبان والمتجر والعملات">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23101827'/%3E%3Cpath d='M12 43 C12 20 48 20 48 37 C48 51 26 52 26 37 C26 29 39 29 39 36' fill='none' stroke='%2327ae60' stroke-width='9' stroke-linecap='round'/%3E%3Ccircle cx='40' cy='35' r='2.5' fill='white'/%3E%3C/svg%3E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Yous Snake</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:#101827;color:#f7f8fb;font-family:Arial,system-ui,sans-serif}
+button{border:0;border-radius:12px;padding:12px 15px;background:#344b67;color:#fff;font-size:16px;font-weight:700;cursor:pointer;touch-action:manipulation}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.55;cursor:not-allowed}
+.primary{background:#1dbb80;color:#062619}
+.gold{color:#ffd45b}
+#home{position:relative;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;text-align:center;background:radial-gradient(circle at 50% 20%,#25435a,#101827 65%)}
+.version{position:absolute;top:12px;left:14px;font-size:11px;color:#9eacbd;letter-spacing:.3px}
+.logo{font-size:clamp(42px,12vw,76px);font-weight:1000;color:#65e6ad;text-shadow:0 5px 0 #14563e,0 10px 25px #0008;margin:0 0 12px}
+.subtitle{color:#bdc9d7;margin:0 0 28px}
+.homeButtons{width:min(340px,90vw);display:grid;gap:12px}
+.homeButtons button{font-size:19px;padding:15px}
+.stats{margin-top:24px;background:#1c2d43;padding:12px 20px;border-radius:14px;font-size:18px}
+#game{display:none;min-height:100vh;padding:10px;max-width:720px;margin:auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:7px;margin-bottom:9px}
+.topbar button{padding:10px;font-size:14px}
+.gameTitle{font-size:22px;color:#65e6ad;font-weight:900}
+.hud{display:flex;justify-content:space-around;flex-wrap:wrap;gap:7px;background:#1c2d43;padding:10px;border-radius:12px}
+canvas{width:min(94vw,600px);height:min(94vw,600px);display:block;margin:10px auto;background:#0b1420;border:3px solid #506b83;border-radius:15px;touch-action:none}
+#controlsRow{display:flex;direction:ltr;justify-content:center;align-items:flex-start;gap:8px;width:100%;margin:8px auto;overflow:visible}
+.playerControlBox{direction:rtl;flex:1;min-width:0;max-width:190px;text-align:center;background:#1c2d43;border-radius:12px;padding:6px 3px}
+.playerControlBox>b{font-size:13px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.healthTag{font-size:12px;margin:3px 0;color:#ffb4b4}
+.controls{direction:ltr;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));width:min(100%,142px);gap:3px;justify-content:center;margin:6px auto}
+.controls button{height:39px;min-width:0;padding:0;font-size:19px;border-radius:9px}
+.controls button:nth-child(1){grid-column:2}
+.controls button:nth-child(2){grid-column:1;grid-row:2}
+.controls button:nth-child(3){grid-column:3;grid-row:2}
+.controls button:nth-child(4){grid-column:2;grid-row:3}
+.gameActions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}
+#message{text-align:center;color:#ffdf83;min-height:25px;margin:8px}
+#endOverlay{display:none;position:fixed;inset:0;background:#000c;z-index:30;align-items:center;justify-content:center;padding:18px}
+.endCard{width:min(390px,92vw);background:#1b2b40;border:2px solid #65e6ad;border-radius:18px;padding:24px 18px;text-align:center;box-shadow:0 18px 55px #000b}
+.endCard h2{margin:0 0 14px;color:#65e6ad;font-size:27px}
+#endDetails{line-height:1.8;color:#f7f8fb;margin:0 0 18px}
+.endActions{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.endActions button{width:100%;padding:12px 8px;font-size:14px}
+#overlay{display:none;position:fixed;inset:0;background:#000b;z-index:10;align-items:center;justify-content:center;padding:12px}
+.modal{width:min(570px,96vw);max-height:90vh;overflow:auto;background:#1b2b40;border:2px solid #49617c;border-radius:19px;padding:14px;box-shadow:0 20px 60px #000a}
+.modalHead{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.back{font-size:23px;line-height:1;padding:8px 14px;background:#40536b}
+.modalTitle{font-size:23px;font-weight:900;flex:1;text-align:center}
+.storeChoices{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.storeChoices button{min-height:83px;font-size:20px;background:#2d4662}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.card{background:#263b54;border:1px solid #49627d;border-radius:13px;padding:10px;text-align:center;min-width:0}
+.snakePreview{height:54px;display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:5px;filter:drop-shadow(0 0 6px var(--snake-glow,#59cbe8))}
+.segment{width:21px;height:20px;border-radius:0;background:var(--skin-color);border:0;box-shadow:none;position:relative;flex:0 0 auto;margin-left:-2px}
+.segment:not(.head):before{content:"";position:absolute;left:4px;top:3px;width:11px;height:3px;border-radius:50%;background:#ffffff55}
+.segment.head{width:29px;height:29px;border:0;border-radius:50%;z-index:2;box-shadow:0 0 10px var(--snake-glow,#59cbe8)}
+.segment.head:before,.segment.head:after{content:"";position:absolute;top:6px;width:8px;height:10px;border-radius:50%;background:#fff;box-shadow:0 0 3px #fff}
+.segment.head:before{left:5px}.segment.head:after{right:5px}
+.segment.head i:before,.segment.head i:after{content:"";position:absolute;top:9px;width:4px;height:5px;border-radius:50%;background:#111;z-index:3}
+.segment.head i:before{left:7px}.segment.head i:after{right:7px}
+.card b{display:block;margin:4px 0}
+.card small{display:block;color:#c3cfdb;margin:5px 0 8px;line-height:1.5}
+.card button{width:100%;padding:9px 5px;font-size:14px}
+.foodEmoji{font-size:34px;height:48px;display:grid;place-items:center}
+.hint{font-size:13px;color:#bfccda;line-height:1.6}
+#botChoice{display:none;margin-top:12px;text-align:center}
+input{padding:9px;border-radius:9px;background:#344b67;color:white;border:1px solid #60758c;max-width:100%}select{padding:9px;border-radius:9px;background:#344b67;color:white;border:0}
+@media(min-width:560px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}#controlsRow{gap:20px}.playerControlBox{max-width:220px}.controls{width:170px}.controls button{height:46px}}
+</style>
+</head>
+<body>
+<section id="home">
+<small class="version">1.0 beta</small>
+<h1 class="logo">Yous Snake</h1>
+<p class="subtitle">🐍 اجمع الأكل والعملات وافتح سكينات وقوى جديدة!</p>
+<div class="homeButtons">
+<button class="primary" id="playBtn" type="button">▶ ابدأ اللعب</button>
+<button id="storeBtn" type="button">🛒 المتجر</button>
+<button id="modesBtn" type="button">🎮 أوضاع اللعب</button>
+<button id="infoBtn" type="button">ℹ️ المعلومات</button>
+<button id="achievementsBtn" type="button">🏆 الإنجازات</button>
+<button id="settingsBtn" type="button">⚙️ الإعدادات</button>
+</div>
+<div class="stats">🪙 العملات: <b id="homeCoins" class="gold">0</b></div>
+</section>
+
+<section id="game">
+<div class="topbar">
+<button id="homeBtn" type="button">⌂ القائمة</button>
+<div class="gameTitle">Yous Snake</div>
+<button id="gameStoreBtn" type="button">🛒 المتجر</button>
+</div>
+<div class="hud">
+<span>🪙 الجولة: <b id="score">0</b></span><span>⏱️ الوقت: <b id="timer">00:00</b></span>
+<span>❤️ الدم: <b id="hp">10</b></span>
+<span id="enemyHp"></span>
+</div>
+<canvas id="board" width="600" height="600"></canvas>
+<div id="controlsRow">
+<div class="playerControlBox" id="player1Panel"><b id="player1Label">Player 1</b><div class="healthTag">❤️ الدم: <span id="hp1">10</span></div><div class="controls" id="controls1">
+<button data-dir="up" type="button">▲</button>
+<button data-dir="left" type="button">◀</button>
+<button data-dir="right" type="button">▶</button>
+<button data-dir="down" type="button">▼</button>
+</div></div>
+<div id="player2Panel" class="playerControlBox" style="display:none"><b id="player2Label">اللاعب الثاني</b><div class="healthTag">❤️ الدم: <span id="hp2">10</span></div><div class="controls" id="controls2"><button data-p2-dir="up">▲</button><button data-p2-dir="left">◀</button><button data-p2-dir="right">▶</button><button data-p2-dir="down">▼</button></div><button id="p2Fire" type="button">🔫 إطلاق</button></div>
+</div>
+<div class="gameActions">
+<button id="fire" type="button" style="display:none">🔫 إطلاق</button>
+<button id="pauseBtn" type="button">إيقاف مؤقت</button>
+<button id="resumeBtn" type="button">متابعة</button>
+</div>
+<div id="message"></div>
+</section>
+
+
+<div id="endOverlay" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+  <div class="endCard">
+    <h2 id="endTitle">أنتهت اللعبة</h2>
+    <p id="endDetails">انتهت الجولة.</p>
+    <div class="endActions">
+      <button class="primary" id="endHomeBtn" type="button">⌂ القائمة</button>
+      <button id="endRetryBtn" type="button">↻ إعادة اللعب</button>
+    </div>
+  </div>
+</div>
+
+<div id="overlay">
+<div class="modal">
+<div class="modalHead">
+<button class="back" id="backBtn" type="button">&lt;</button>
+<div class="modalTitle" id="modalTitle">المتجر</div>
+</div>
+<div id="storeMain" class="storeChoices">
+<button id="skinsBtn" type="button">🐍 السكينات</button>
+<button id="foodBtn" type="button">🍎 الأكل</button>
+<button id="powersBtn" type="button">⚡ القوى</button>
+<button id="weaponsBtn" type="button">🔫 المسدسات</button>
+</div>
+<div id="skinsPage" style="display:none">
+<p class="hint">اختار شكل التعبان. السكينات التي اشتريتها تقدر تستخدمها مجاناً.</p>
+<div class="grid" id="skinGrid"></div>
+</div>
+<div id="foodPage" style="display:none">
+<p class="hint">الأكل الذي تشتريه ممكن يظهر أثناء اللعب ويمنحك عملات حسب نوعه.</p>
+<div class="grid" id="foodGrid"></div>
+</div>
+<div id="powersPage" style="display:none">
+<p class="hint">القوى تساعدك أثناء الجولة. كل قوة تُشترى مرة واحدة وتظل مفعلة.</p>
+<div class="grid" id="powerGrid"></div>
+</div>
+<div id="weaponsPage" style="display:none"><p class="hint">أسلحة وضع 1v1. اختر سلاحك قبل بدء الجولة.</p><div class="grid" id="weaponGrid"></div></div>
+<div id="modePage" style="display:none">
+<p class="hint">اختار وضع اللعب:</p>
+<div class="storeChoices">
+<button data-mode="classic" type="button">🐍 عادي</button>
+<button data-mode="race" type="button">🏆 منافسة</button>
+<button data-mode="duel" type="button">🎯 واحد ضد واحد</button>
+</div>
+<div id="multiplayerChoice" style="display:block;margin:12px 0;text-align:center"><b>طريقة اللعب</b><div class="storeChoices"><button data-multiplayer="solo">لاعب ضد بوتات</button><button data-multiplayer="local">لاعبان على نفس الموبايل</button></div></div>
+<div id="botChoice">عدد البوتات:
+<select id="botCount"><option value="2">2</option><option value="3">3</option><option value="4">4</option></select>
+</div>
+</div>
+<div id="infoPage" style="display:none"><div id="infoSections" class="grid"></div></div>
+<div id="achievementsPage" style="display:none"><div id="achievementsList"></div></div>
+<div id="settingsPage" style="display:none"><p class="hint">أسماء اللاعبين التي تظهر أثناء اللعب</p><label>اسم اللاعب الأول <input id="name1" maxlength="18" value="Player 1"></label><br><br><label>اسم اللاعب الثاني <input id="name2" maxlength="18" value="Player 2"></label><br><br><button class="primary" id="saveNames">حفظ الأسماء</button></div>
+<div id="infoDetail" style="display:none"></div>
+</div>
+
+<script>
+"use strict";
+(() => {
+const $ = id => document.getElementById(id);
+const skins = [
+{name:"أسود",color:"#171717",price:17},{name:"أحمر",color:"#e53935",price:17},
+{name:"أصفر",color:"#fdd835",price:17},{name:"أزرق",color:"#2878e8",price:17},
+{name:"بنفسجي",color:"#9b59d0",price:17},{name:"أبيض",color:"#f2f2f2",price:17},
+{name:"أزرق فاتح",color:"#59cbe8",price:17},{name:"أخضر غامق",color:"#176b3a",price:17},
+{name:"برتقالي",color:"#f28c28",price:17},{name:"رمادي",color:"#888888",price:17},
+{name:"بني",color:"#8b5a2b",price:17},{name:"قوس قزح",color:"rainbow",price:70},
+{name:"مخطط",color:"striped",price:150},{name:"النمر",color:"tiger",price:250}
+];
+const foods = [
+{name:"أناناس",emoji:"🍍",price:10,gain:2},{name:"برتقال",emoji:"🍊",price:100,gain:5},
+{name:"جزر",emoji:"🥕",price:250,gain:20},{name:"سلطة",emoji:"🥗",price:500,gain:50}
+];
+const powers = [
+{name:"المغناطيس",emoji:"🧲",price:100,desc:"يجذب الأكل القريب تدريجيًا نحو الثعبان"},
+{name:"قوة الأسد",emoji:"🦁",price:200,desc:"يجذب الأكل من مسافة أبعد وبقوة أكبر"}
+];
+const weapons=[
+{name:"الرشاش",emoji:"🔫",price:250,desc:"يطلق كل نصف ثانية ويسبب ضرر قلب واحد."},
+{name:"الشوتجان",emoji:"💥",price:250,desc:"ضربة قوية تسبب 3 قلوب ضرر، بفاصل 4 ثوانٍ."},
+{name:"القوس السام",emoji:"🏹",price:250,desc:"يسمم الخصم 4 ثوانٍ، ويخصم قلبًا كل ثانيتين."},
+{name:"السيف",emoji:"⚔️",price:150,desc:"ضرره قلبان عند ملامسة جسم الخصم، وليس الرأس."},
+{name:"البازوكا",emoji:"🚀",price:300,desc:"قذيفة تسبب 5 قلوب ضرر، بفاصل 10 ثوانٍ."},
+{name:"الدرع",emoji:"🛡️",price:200,desc:"يصد طلقة، ويمكن رميه لإحداث قلبين ضرر. يحتاج 4 ثوانٍ للإصلاح."},
+{name:"المسدس العادي",emoji:"🔫",price:0,desc:"سلاح مجاني تحصل عليه من بداية اللعبة. يسبب قلبًا واحدًا من الضرر."}
+];
+const botNames=["gamerboy_1","حسن","ukropy","holta","مستر عبدالله","حماده","قوصر","كاسر","خالد","عمك","القوي"];
+const defaultData = {coins:0,totalCoinsEarned:0,duelWins:0,raceWins:0,claimedAchievements:[],owned:[0],skin:0,foods:[],powers:[],weapons:[6],selectedPower:-1,selectedWeapon:6,selectedFood:-1};
+let data = loadData();
+function loadData(){
+try{
+const saved = JSON.parse(localStorage.getItem("yousSnakeSave") || "null");
+if(!saved || typeof saved !== "object") return {...defaultData};
+return {
+coins:Number.isFinite(saved.coins) ? Math.max(0,saved.coins) : 0,
+totalCoinsEarned:Number.isFinite(saved.totalCoinsEarned)?Math.max(0,saved.totalCoinsEarned):0,duelWins:saved.duelWins||0,raceWins:saved.raceWins||0,claimedAchievements:Array.isArray(saved.claimedAchievements)?saved.claimedAchievements:[],selectedPower:Number.isInteger(saved.selectedPower)?saved.selectedPower:-1,selectedWeapon:Number.isInteger(saved.selectedWeapon)&&saved.selectedWeapon>=0?saved.selectedWeapon:6,selectedFood:Number.isInteger(saved.selectedFood)?saved.selectedFood:-1,
+owned:Array.isArray(saved.owned) ? saved.owned : [0],
+skin:Number.isInteger(saved.skin) ? saved.skin : 0,
+foods:Array.isArray(saved.foods) ? saved.foods : [],
+powers:saved.powersVersion===1 ? (Array.isArray(saved.powers) ? saved.powers : []) : (Array.isArray(saved.powers) ? [...(saved.powers.includes(1)?[0]:[]), ...(saved.powers.includes(2)?[1]:[])] : []),
+powersVersion:1,weapons:Array.isArray(saved.weapons)?[...new Set([...saved.weapons,6])]:[6]
+};
+}catch(error){return {...defaultData};}
+}
+function saveData(){
+try{data.powersVersion=1;localStorage.setItem("yousSnakeSave",JSON.stringify(data));}
+catch(error){$("message").textContent="الحفظ غير متاح في وضع التصفح ده.";}
+updateCoins();
+}
+function updateCoins(){$("homeCoins").textContent=String(data.coins);}
+function showOverlay(page){
+$("overlay").style.display="flex";
+showPage(page || "main");
+}
+function hideOverlay(){$("overlay").style.display="none";}
+function showPage(page){
+const pages = {main:"storeMain",skins:"skinsPage",food:"foodPage",powers:"powersPage",weapons:"weaponsPage",modes:"modePage",info:"infoPage",achievements:"achievementsPage",settings:"settingsPage",detail:"infoDetail"};
+Object.keys(pages).forEach(key=>{$(pages[key]).style.display=key===page?(key==="main"?"grid":"block"):"none";});
+const titles = {main:"المتجر",skins:"السكينات",food:"الأكل",powers:"القوى",weapons:"المسدسات",modes:"أوضاع اللعب",info:"معلومات اللعبة",achievements:"الإنجازات",settings:"الإعدادات",detail:"معلومات تفصيلية"};
+$("modalTitle").textContent=titles[page] || "المتجر";
+$("backBtn").textContent=page==="main"?"×":"<";
+}
+function snakePreview(s){
+let colors;
+if(s.color==="rainbow") colors=["#f44","#fa3","#fd4","#3c8","#39f","#a6f"];
+else if(s.color==="striped") colors=["#eee","#333","#eee","#333","#eee"];
+else if(s.color==="tiger") colors=["#ff9d22","#161616","#ff9d22","#161616","#ff9d22"];
+else colors=[s.color,s.color,s.color,s.color,s.color];
+return '<div class="snakePreview" style="--snake-glow:'+colors[0]+'">'+colors.slice(1).reverse().map(c=>'<span class="segment" style="background:'+c+'"></span>').join("")+'<span class="segment head" style="background:'+colors[0]+'"><i></i></span></div>';
+}
+function renderShop(){
+$("weaponGrid").innerHTML=weapons.map((w,i)=>{const owned=data.weapons.includes(i),selected=data.selectedWeapon===i;return '<div class="card"><div class="foodEmoji">'+w.emoji+'</div><b>'+w.name+'</b><small>'+w.desc+'<br>السعر '+w.price+' 🪙</small><button data-weapon="'+i+'">'+(selected?'✓ مُعيّن':owned?'اختيار':'شراء')+'</button></div>';}).join("");
+$("skinGrid").innerHTML=skins.map((s,i)=>{
+const owned=data.owned.includes(i);
+const label=owned?(data.skin===i?"الشكل الحالي":"اختيار"):"شراء";
+return '<div class="card">'+snakePreview(s)+'<b>'+s.name+'</b><small>'+s.price+' 🪙</small><button type="button" data-skin="'+i+'">'+label+'</button></div>';
+}).join("");
+$("foodGrid").innerHTML=foods.map((f,i)=>{
+const bought=data.foods.includes(i),selected=data.selectedFood===i;
+return '<div class="card"><div class="foodEmoji">'+f.emoji+'</div><b>'+f.name+'</b><small>السعر '+f.price+' 🪙<br>يعطي '+f.gain+' عملات</small><button type="button" data-food="'+i+'">'+(selected?"✓ مُعيّن":bought?"اختيار":"شراء")+'</button></div>';
+}).join("");
+$("powerGrid").innerHTML=powers.map((p,i)=>{
+const bought=data.powers.includes(i),selected=data.selectedPower===i;
+return '<div class="card"><div class="foodEmoji">'+p.emoji+'</div><b>'+p.name+'</b><small>'+p.desc+'<br>السعر '+p.price+' 🪙</small><button type="button" data-power="'+i+'">'+(selected?"✓ مُعيّنة":bought?"اختيار":"شراء")+'</button></div>';
+}).join("");
+}
+function buyOrSelectSkin(i){
+if(data.owned.includes(i)){data.skin=i;}
+else if(data.coins>=skins[i].price){data.coins-=skins[i].price;data.owned.push(i);data.skin=i;}
+else{alert("عملاتك مش كفاية");return;}
+saveData();renderShop();
+}
+function buyFood(i){
+if(data.foods.includes(i)){data.selectedFood=i;}else{if(data.coins<foods[i].price){alert("عملاتك مش كفاية");return;}data.coins-=foods[i].price;data.foods.push(i);data.selectedFood=i;}saveData();renderShop();
+}
+function buyWeapon(i){if(data.weapons.includes(i)){data.selectedWeapon=i;}else{if(data.coins<weapons[i].price){alert("عملاتك مش كفاية");return;}data.coins-=weapons[i].price;data.weapons.push(i);data.selectedWeapon=i;}saveData();renderShop();updateFireButton();}
+function buyPower(i){
+if(data.powers.includes(i)){data.selectedPower=i;}else{if(data.coins<powers[i].price){alert("عملاتك مش كفاية");return;}data.coins-=powers[i].price;data.powers.push(i);data.selectedPower=i;}saveData();renderShop();
+}
+function renderAchievements(){
+ const items=[{id:"duel",name:"بطل 1v1",value:data.duelWins,target:5,reward:150},{id:"coins",name:"جامع العملات",value:data.totalCoinsEarned,target:5000,reward:1500},{id:"race",name:"ملك المنافسة",value:data.raceWins,target:10,reward:300}];
+ $("achievementsList").innerHTML=items.map(a=>{const done=a.value>=a.target,claimed=data.claimedAchievements.includes(a.id),pct=Math.min(100,a.value/a.target*100);return `<div class="card" style="margin:10px 0;padding:14px"><b>${a.name}</b><div style="margin:8px 0">${a.value}/${a.target}</div><div style="height:12px;background:#263545;border-radius:20px;overflow:hidden"><div style="height:100%;width:${pct}%;background:#39c879"></div></div><small>المكافأة: ${a.reward} عملة</small><button data-claim="${a.id}" ${!done||claimed?'disabled':''}>${claimed?'تم استلام المكافأة':done?'استلام المكافأة':'لم يكتمل بعد'}</button></div>`}).join("");
+}
+$("achievementsBtn").addEventListener("click",()=>{renderAchievements();showOverlay("achievements");});
+$("achievementsList").addEventListener("click",e=>{const b=e.target.closest('[data-claim]');if(!b)return;const id=b.dataset.claim;const a={duel:[data.duelWins,5,150],coins:[data.totalCoinsEarned,5000,1500],race:[data.raceWins,10,300]}[id];if(!a||a[0]<a[1]||data.claimedAchievements.includes(id))return;data.claimedAchievements.push(id);data.coins+=a[2];data.totalCoinsEarned+=a[2];saveData();renderAchievements();});
+$("storeBtn").addEventListener("click",()=>{renderShop();showOverlay("main");});
+$("gameStoreBtn").addEventListener("click",()=>{renderShop();showOverlay("main");});
+$("skinsBtn").addEventListener("click",()=>showPage("skins"));
+$("foodBtn").addEventListener("click",()=>showPage("food"));
+$("powersBtn").addEventListener("click",()=>showPage("powers"));
+$("weaponsBtn").addEventListener("click",()=>{showPage("weapons");updateFireButton();});
+$("weaponGrid").addEventListener("click",e=>{const b=e.target.closest("[data-weapon]");if(b)buyWeapon(+b.dataset.weapon);});
+$("modesBtn").addEventListener("click",()=>showOverlay("modes"));
+$("backBtn").addEventListener("click",()=>{if($("storeMain").style.display!=="none")hideOverlay();else if($("infoDetail").style.display!=="none")showPage("info");else showPage("main");});
+$("overlay").addEventListener("click",event=>{if(event.target===$("overlay"))hideOverlay();});
+$("skinGrid").addEventListener("click",event=>{const b=event.target.closest("[data-skin]");if(b)buyOrSelectSkin(Number(b.dataset.skin));});
+$("foodGrid").addEventListener("click",event=>{const b=event.target.closest("[data-food]");if(b)buyFood(Number(b.dataset.food));});
+$("powerGrid").addEventListener("click",event=>{const b=event.target.closest("[data-power]");if(b)buyPower(Number(b.dataset.power));});
+
+let mode="classic",snake=[],dir={x:1,y:0},snake2=[],dir2={x:-1,y:0},apple=null,loop=null,playing=false,paused=false,multiplayer="solo",name1="Player 1",name2="Player 2",weaponCooldown=0,projectiles=[];
+let score=0,hp=10,bots=[],treasures=[],shots=[],botShots=[],botLastShot=0,tick=0,botHp=10,roundCoins=0,gameStartedAt=0,elapsedBeforeStart=0,timerLoop=null,bonusPaid=false,weaponLastShot=0,poisonUntil=0,lastPoisonTick=0;
+let apple2=null,knifeChests=[],chestMoveAt=0,chestAnimationStart=0,chestFrom=[],chestTo=[];
+const canvas=$("board"),ctx=canvas.getContext("2d");
+const N=20,C=30;
+const rand=()=>Math.floor(Math.random()*N);
+const randomPos=()=>({x:rand(),y:rand()});
+function randomApple(){
+// يظهر الأكل في مكان خالٍ يبعد عن الثعبان من 7 إلى 15 خانة، وليس فوق جسمه.
+const head=snake&&snake.length?snake[0]:{x:10,y:10};
+const wrapDistance=(a,b)=>{const d=Math.abs(a-b);return Math.min(d,N-d);};
+let best=null;
+for(let tries=0;tries<400;tries++){
+  const p=randomPos();
+  const onSnake=snake&&snake.some(part=>part.x===p.x&&part.y===p.y);
+  if(onSnake)continue;
+  const distance=Math.hypot(wrapDistance(p.x,head.x),wrapDistance(p.y,head.y));
+  if(distance>=7&&distance<=15)return {...p,emoji:data.selectedFood>=0?foods[data.selectedFood].emoji:"🍎",gain:(data.selectedFood>=0?foods[data.selectedFood].gain:1)};
+  if(!best||Math.abs(distance-11)<best.diff)best={...p,diff:Math.abs(distance-11)};
+}
+if(best)return {x:best.x,y:best.y,emoji:data.selectedFood>=0?foods[data.selectedFood].emoji:"🍎",gain:(data.selectedFood>=0?foods[data.selectedFood].gain:1)};
+// احتياط لو الثعبان شغل معظم الخريطة.
+for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+  if(!snake||!snake.some(part=>part.x===x&&part.y===y))return {x,y,emoji:data.selectedFood>=0?foods[data.selectedFood].emoji:"🍎",gain:(data.selectedFood>=0?foods[data.selectedFood].gain:1)};
+}
+return {x:0,y:0,emoji:"🍎",gain:(data.selectedFood>=0?foods[data.selectedFood].gain:1)};
+}
+function randomAppleForSecond(){
+const p=randomApple();
+for(let i=0;i<80&&snake2.some(part=>part.x===p.x&&part.y===p.y);i++){p.x=rand();p.y=rand();}
+return p;
+}
+function initialBody(x,y,dx,dy,length=5){return Array.from({length},(_,i)=>({x:(x-dx*i+N)%N,y:(y-dy*i+N)%N}));}
+function makeChestPositions(){
+// خمسة صناديق 3×3 موزعة أعلى وأسفل ووسط ويسار ويمين الخريطة.
+return [{x:9,y:0},{x:9,y:17},{x:9,y:9},{x:0,y:9},{x:17,y:9}];
+}
+function isInsideChest(p,chests=knifeChests){
+return chests.some(c=>p.x>=Math.floor(c.x)&&p.x<Math.floor(c.x)+3&&p.y>=Math.floor(c.y)&&p.y<Math.floor(c.y)+3);
+}
+function safeSpawn(length=5,blocked=[]){
+for(let tries=0;tries<500;tries++){
+ const p=randomPos();
+ const body=Array.from({length},(_,i)=>[{x:(p.x-i+N)%N,y:p.y},{x:(p.x+i)%N,y:p.y}]).flat();
+ if(body.some(q=>isInsideChest(q)||blocked.some(b=>b.x===q.x&&b.y===q.y)))continue;
+ return p;
+}
+return {x:3,y:3};
+}
+function randomChestTargets(){
+// كل صندوق يختار وجهة مستقلة وعشوائية، مع ترك مسافة تمنع تكدس الصناديق.
+const out=[];
+for(let i=0;i<5;i++){
+ let p,tries=0;
+ do{
+   p={x:Math.floor(Math.random()*(N-2)),y:Math.floor(Math.random()*(N-2))};
+   tries++;
+ }while(tries<500&&out.some(q=>Math.abs(q.x-p.x)<4&&Math.abs(q.y-p.y)<4));
+ out.push(p);
+}
+return out;
+}
+function updateFireButton(){
+ const equipped=data.selectedWeapon>=0&&data.weapons.includes(data.selectedWeapon)?weapons[data.selectedWeapon]:null;
+ const label=equipped?(equipped.emoji+" "+equipped.name):"🔫 اختر سلاحًا";
+ ["fire","p2Fire"].forEach(id=>{const el=$(id);if(!el)return;el.textContent=label;el.disabled=!equipped;el.title=equipped?"إطلاق "+equipped.name:"اشترِ سلاحًا وعيّنه من المتجر أولًا";});
+}
+function setMode(nextMode){
+mode=nextMode;
+updateFireButton();
+$("fire").style.display=mode==="duel"?"inline-block":"none";
+hideOverlay();
+startGame();
+}
+document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>setMode(b.dataset.mode)));
+document.querySelectorAll("[data-multiplayer]").forEach(b=>b.addEventListener("click",()=>{multiplayer=b.dataset.multiplayer;document.querySelectorAll("[data-multiplayer]").forEach(x=>x.style.outline=x===b?"3px solid #65e6ad":"none");}));
+$("infoBtn").addEventListener("click",()=>{showOverlay("info");$("infoSections").innerHTML=["الأسلحة","القوة","الفاكه","لعب ماب المنافسة","لعب ماب 1v1","لعب الماب العادي","الأزرار"].map((x,i)=>'<button class="card" data-info="'+i+'">'+x+'</button>').join("");});
+$("infoSections").addEventListener("click",e=>{const b=e.target.closest("[data-info]");if(!b)return;const texts=["الرشاش: ضرر قلب كل 0.5 ثانية. الشوتجان: 3 قلوب كل 4 ثوانٍ. القوس السام: سم 4 ثوانٍ. السيف: قلبان عند لمس الجسم. البازوكا: 5 قلوب كل 10 ثوانٍ. الدرع يصد طلقة ويمكن رميه.","المغناطيس يجذب الطعام، وقوة الأسد تجذبه من مسافة أكبر.","اجمع التفاح وباقي الفاكهة لزيادة النقاط والعملات.","ماب المنافسة فيه 5 صناديق سكاكين بحجم 3×3 خانات. تتحرك كل 7 ثوانٍ إلى أماكن عشوائية، وتستغرق الحركة ثانية واحدة. لمس أي صندوق يخرج اللاعب أو البوت من المنافسة. تفوز إذا بقيت آخر من لم يلمس صندوقًا.","قاتل البوت أو لاعبًا ثانيًا على نفس الهاتف.","تحرك واجمع الطعام وتجنب الاصطدام بنفسك.","استخدم الأسهم للتحرك، وزر إطلاق السلاح للهجوم."];$("infoDetail").innerHTML='<h2 style="font-size:28px">'+["الأسلحة","القوة","الفاكه","لعب ماب المنافسة","لعب ماب 1v1","لعب الماب العادي","الأزرار"][+b.dataset.info]+'</h2><div style="font-size:21px;line-height:1.8">'+texts[+b.dataset.info]+'</div>';showPage("detail");});
+$("settingsBtn").addEventListener("click",()=>{$("name1").value=name1;$("name2").value=name2;showOverlay("settings");});
+$("saveNames").addEventListener("click",()=>{name1=$("name1").value.trim()||"Player 1";name2=$("name2").value.trim()||"Player 2";$("player1Label").textContent=name1;$("player2Label").textContent=name2;alert("تم حفظ الأسماء");hideOverlay();});
+function startGame(){
+updateFireButton();
+$("home").style.display="none";$("game").style.display="block";
+const startLength=mode==="classic"?2:5;
+// جهّز الصناديق قبل تحديد أماكن البداية حتى لا يظهر أي لاعب فوق صندوق.
+knifeChests=mode==="race"?makeChestPositions():[];
+const p1=mode==="race"?safeSpawn(startLength):{x:4,y:5};
+snake=initialBody(p1.x,p1.y,1,0,startLength);dir={x:1,y:0};
+const p2=mode==="race"&&multiplayer==="local"?safeSpawn(startLength,snake):{x:15,y:15};
+snake2=multiplayer==="local"?initialBody(p2.x,p2.y,-1,0,startLength):[];dir2={x:-1,y:0};$("player2Panel").style.display=snake2.length?"block":"none";$("player2Panel").style.opacity="1";$("player1Label").textContent=name1;$("player2Label").textContent=name2;$("controlsRow").style.justifyContent=snake2.length?"space-between":"center";
+apple=mode==="duel"?null:randomApple();apple2=(mode==="classic"&&snake2.length)?randomAppleForSecond():null;score=0;hp=10;tick=0;botHp=Math.random()<.5?10:15;roundCoins=0;bonusPaid=false;elapsedBeforeStart=0;gameStartedAt=Date.now();$("timer").textContent="00:00";$("endOverlay").style.display="none";
+bots=[];shots=[];botShots=[];botLastShot=Date.now();projectiles=[];weaponCooldown=0;weaponLastShot=0;poisonUntil=0;lastPoisonTick=0;treasures=[];
+chestFrom=knifeChests.map(p=>({...p}));chestTo=knifeChests.map(p=>({...p}));chestMoveAt=Date.now()+7000;chestAnimationStart=0;
+const botCount=mode==="race"?Number($("botCount").value):(mode==="duel"?1:0);
+for(let i=0;i<botCount;i++){
+const botLength=mode==="classic"?2:5;
+const p=safeSpawn(botLength,[...snake,...snake2,...bots.flatMap(b=>b.body)]);
+const body=Array.from({length:botLength},(_,j)=>({x:(p.x+j+N)%N,y:p.y}));
+bots.push({body,score:0,dir:{x:-1,y:0},name:botNames[Math.floor(Math.random()*botNames.length)],skin:Math.floor(Math.random()*skins.length),weapon:Math.random()<0.5?6:0,lastShot:Date.now()});
+}
+$("score").textContent="0";$("hp").textContent=String(hp);$("hp1").textContent=String(hp);$("hp2").textContent="10";$("enemyHp").textContent="";
+$("message").textContent="";playing=true;paused=false;
+clearInterval(loop);clearInterval(timerLoop);loop=setInterval(step,300);timerLoop=setInterval(updateTimer,250);draw();
+}
+function stop(){
+if(playing&&gameStartedAt)elapsedBeforeStart+=Date.now()-gameStartedAt;
+playing=false;paused=true;clearInterval(loop);clearInterval(timerLoop);
+}
+function updateWeaponCooldown(){
+ const equipped=data.selectedWeapon>=0&&data.weapons.includes(data.selectedWeapon)?weapons[data.selectedWeapon]:null;
+ const cooldown=[500,4000,2000,1000,10000,4000,1000][data.selectedWeapon]||500;
+ const left=Math.max(0,cooldown-(Date.now()-weaponLastShot));
+ ["fire","p2Fire"].forEach(id=>{const el=$(id);if(!el||!equipped)return;const base=equipped.emoji+" "+equipped.name;el.textContent=left>0?base+" · "+(left/1000).toFixed(1)+"ث":base+" · جاهز";});
+}
+function updateTimer(){
+updateWeaponCooldown();
+if(!gameStartedAt)return;
+const elapsed=elapsedBeforeStart+(playing?Date.now()-gameStartedAt:0);
+const seconds=Math.floor(elapsed/1000);
+$("timer").textContent=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
+}
+function turn(next){
+if(next.x!==-dir.x||next.y!==-dir.y)dir=next;
+}
+document.querySelectorAll("[data-p2-dir]").forEach(b=>b.addEventListener("click",()=>{const d=b.dataset.p2Dir;const n=d==="up"?{x:0,y:-1}:d==="down"?{x:0,y:1}:d==="left"?{x:-1,y:0}:{x:1,y:0};if(n.x!==-dir2.x||n.y!==-dir2.y)dir2=n;}));
+document.querySelectorAll("[data-dir]").forEach(b=>b.addEventListener("click",()=>{
+const d=b.dataset.dir;
+turn(d==="up"?{x:0,y:-1}:d==="down"?{x:0,y:1}:d==="left"?{x:-1,y:0}:{x:1,y:0});
+}));
+document.addEventListener("keydown",event=>{
+const keys={ArrowUp:{x:0,y:-1},ArrowDown:{x:0,y:1},ArrowLeft:{x:-1,y:0},ArrowRight:{x:1,y:0}};
+if(keys[event.key]){event.preventDefault();turn(keys[event.key]);}
+if(event.code==="Space"&&mode==="duel"){event.preventDefault();shoot();}
+});
+function shoot(player=1){
+if(!playing||mode!=="duel"||data.selectedWeapon<0||!data.weapons.includes(data.selectedWeapon))return;
+const now=Date.now(), cooldown=[500,4000,2000,1000,10000,4000,1000][data.selectedWeapon]||500;
+if(now-weaponLastShot<cooldown)return;
+weaponLastShot=now;
+const is2=player===2&&snake2.length;const h=is2?snake2[0]:snake[0],d=is2?dir2:dir;
+shots.push({x:h.x,y:h.y,dx:d.x,dy:d.y,left:8,owner:player,weapon:data.selectedWeapon});
+}
+$("p2Fire").addEventListener("click",()=>shoot(2));
+$("fire").addEventListener("click",()=>shoot(1));
+function finish(message){
+if(!playing)return;
+stop();updateTimer();
+let bonusText="لم تحصل على البونس. اجمع 10 عملات أو أكثر في الجولة القادمة.";
+if(roundCoins>=10&&!bonusPaid){data.coins+=5;data.totalCoinsEarned+=5;bonusPaid=true;saveData();bonusText="🎉 حصلت على بونس +5 عملات!";}
+$("endDetails").textContent=message+" | عملات الجولة: "+roundCoins+" | "+bonusText;
+$("endOverlay").style.display="flex";
+}
+function step(){
+if(!playing)return;
+tick++;
+const head={x:(snake[0].x+dir.x+N)%N,y:(snake[0].y+dir.y+N)%N};
+if(snake.some((p,i)=>i>0&&p.x===head.x&&p.y===head.y)){finish("اصطدمت بنفسك! اضغط ابدأ اللعب لجولة جديدة.");return;}
+snake.unshift(head);
+if(snake2.length){const h2={x:(snake2[0].x+dir2.x+N)%N,y:(snake2[0].y+dir2.y+N)%N};if(snake2.some((p,i)=>i>0&&p.x===h2.x&&p.y===h2.y)){snake2=[];$("message").textContent=name2+" اصطدم بنفسه!";}else{snake2.unshift(h2);if(!(mode==="classic"&&apple2&&h2.x===Math.round(apple2.x)&&h2.y===Math.round(apple2.y)))snake2.pop();}}
+const hasMagnet=data.selectedPower===0;
+const hasLion=data.selectedPower===1;
+let gotApple=!!apple&&head.x===Math.round(apple.x)&&head.y===Math.round(apple.y);
+if(apple&&(hasMagnet||hasLion)&&mode!=="duel"){
+  const wrappedDelta=(from,to)=>{let d=to-from;if(d>N/2)d-=N;if(d<-N/2)d+=N;return d;};
+  const dx=wrappedDelta(apple.x,head.x),dy=wrappedDelta(apple.y,head.y);
+  const distance=Math.hypot(dx,dy);
+  const magnetRange=hasLion?9:5;
+  const pullSpeed=hasLion?0.62:0.42;
+  if(distance<=magnetRange&&distance>0){const pull=Math.min(pullSpeed,distance);apple.x=(Math.round(apple.x+dx/distance*pull)+N)%N;apple.y=(Math.round(apple.y+dy/distance*pull)+N)%N; if(snake.some(part=>part.x===apple.x&&part.y===apple.y)){apple.x=Math.round(apple.x-dx/distance*pull+N)%N;apple.y=Math.round(apple.y-dy/distance*pull+N)%N;}}
+  const nearX=Math.min(Math.abs(apple.x-head.x),N-Math.abs(apple.x-head.x));
+  const nearY=Math.min(Math.abs(apple.y-head.y),N-Math.abs(apple.y-head.y));
+  gotApple=nearX*nearX+nearY*nearY<=0.75*0.75;
+}
+if(gotApple){
+const foodGain=apple.gain||1;score+=1;data.coins+=foodGain;data.totalCoinsEarned+=foodGain;roundCoins+=foodGain;saveData();apple=randomApple();
+}else snake.pop();
+if(mode==="classic"&&snake2.length&&apple2){
+ const h2=snake2[0];
+ if(h2.x===Math.round(apple2.x)&&h2.y===Math.round(apple2.y)){const foodGain2=apple2.gain||1;score+=1;data.coins+=foodGain2;data.totalCoinsEarned+=foodGain2;roundCoins+=foodGain2;saveData();apple2=randomAppleForSecond();}
+}
+if(mode==="race")updateRace(head);
+if(mode==="duel")updateDuel(head);
+$("score").textContent=String(score);$("hp").textContent=String(hp);
+$("enemyHp").textContent=mode==="duel"?"دم البوت: "+botHp:"";
+draw();
+}
+function updateRace(head){
+ const now=Date.now();
+ if(now>=chestMoveAt){
+   chestFrom=knifeChests.map(p=>({...p}));chestTo=randomChestTargets();chestAnimationStart=now;chestMoveAt=now+7000;
+ }
+ // تنتقل الصناديق كل 7 ثوانٍ، وتستغرق الحركة نفسها ثانية واحدة فقط.
+ const rawProgress=chestAnimationStart?Math.min(1,(now-chestAnimationStart)/1000):1;
+ const progress=rawProgress<0.5?2*rawProgress*rawProgress:1-Math.pow(-2*rawProgress+2,2)/2;
+ const liveChests=chestFrom.map((p,i)=>({x:p.x+(chestTo[i].x-p.x)*progress,y:p.y+(chestTo[i].y-p.y)*progress}));
+ knifeChests=liveChests.map(p=>({...p}));
+ const hits=(body)=>body.some(part=>liveChests.some(c=>part.x>=Math.floor(c.x)&&part.x<Math.floor(c.x)+3&&part.y>=Math.floor(c.y)&&part.y<Math.floor(c.y)+3));
+ if(hits(snake)){finish("لمست صندوق السكاكين وانتهت الجولة!");return;}
+ if(snake2.length&&hits(snake2)){snake2=[];$("player2Panel").style.opacity=".45";$("hp2").textContent="0";$("message").textContent=name2+" لمس صندوق السكاكين وخرج من المنافسة!";}
+ bots=bots.filter(bot=>{
+   const p=bot.body[0];
+   if(Math.random()<.35){const dx=head.x-p.x,dy=head.y-p.y;bot.dir=Math.abs(dx)>Math.abs(dy)?{x:Math.sign(dx),y:0}:{x:0,y:Math.sign(dy)};}
+   const next={x:(p.x+bot.dir.x+N)%N,y:(p.y+bot.dir.y+N)%N};
+   bot.body.unshift(next);bot.body.pop();
+   return !hits(bot.body);
+ });
+ if(bots.length===0){data.coins+=10;data.totalCoinsEarned+=10;data.raceWins++;roundCoins+=10;saveData();finish("نجوت من صناديق السكاكين وفزت بالمنافسة! +10 عملات.");}
+}
+function updateDuel(head){
+const bot=bots[0];
+if(tick%4===0&&bot){
+const p=bot.body[0];
+const dx=head.x-p.x,dy=head.y-p.y;
+const next={x:(p.x+Math.sign(dx)+N)%N,y:(p.y+Math.sign(dy)+N)%N};
+bot.body.unshift(next);bot.body.pop();
+}
+// البوت يحمل سلاحًا ظاهرًا عند فمه: المسدس كل ثانيتين أو الرشاش كل ثانية.
+const botFireDelay=bot&&bot.weapon===0?1000:2000;
+if(bot&&Date.now()-botLastShot>=botFireDelay){
+ const p=bot.body[0],dx=head.x-p.x,dy=head.y-p.y;
+ const aim=Math.abs(dx)>=Math.abs(dy)?{x:Math.sign(dx)||1,y:0}:{x:0,y:Math.sign(dy)||1};
+ botShots.push({x:p.x,y:p.y,dx:aim.x,dy:aim.y,left:12});
+ botLastShot=Date.now();
+}
+botShots=botShots.filter(s=>{
+ s.x=(s.x+s.dx+N)%N;s.y=(s.y+s.dy+N)%N;s.left--;
+ if(snake.some(part=>part.x===s.x&&part.y===s.y)){
+  hp=Math.max(0,hp-1);$("hp1").textContent=String(hp);$("hp").textContent=String(hp);
+  if(hp<=0)finish("البوت كسب المواجهة. حاول تاني!");
+  return false;
+ }
+ return s.left>0;
+});
+shots=shots.filter(s=>{
+s.x+=s.dx;s.y+=s.dy;s.left--;
+if(bot&&bot.body.some((p,i)=>p.x===s.x&&p.y===s.y)){
+const damage=[1,3,1,2,5,2,1][s.weapon]||1;
+if(s.weapon===2){poisonUntil=Date.now()+4000;lastPoisonTick=tick;}
+botHp=Math.max(0,botHp-damage);
+if(botHp<=0){data.coins+=25;data.totalCoinsEarned+=25;data.duelWins++;roundCoins+=25;saveData();finish("فزت بالمواجهة! +25 عملة.");}
+return false;
+}
+return s.left>0;
+});
+if(poisonUntil>Date.now()&&tick-lastPoisonTick>=7){botHp=Math.max(0,botHp-1);lastPoisonTick=tick;if(botHp<=0){data.coins+=25;data.totalCoinsEarned+=25;data.duelWins++;roundCoins+=25;saveData();finish("فزت بالمواجهة! +25 عملة.");}}
+
+}
+function draw(){
+ctx.fillStyle="#0b1420";ctx.fillRect(0,0,600,600);
+ctx.strokeStyle="#1b2a3a";
+for(let i=0;i<=N;i++){
+ctx.beginPath();ctx.moveTo(i*C,0);ctx.lineTo(i*C,600);ctx.stroke();
+ctx.beginPath();ctx.moveTo(0,i*C);ctx.lineTo(600,i*C);ctx.stroke();
+}
+ctx.font="23px Arial";
+if(mode==="race"){
+ knifeChests.forEach(c=>{
+  const x=c.x*C,y=c.y*C,w=3*C,h=3*C;
+  ctx.save();ctx.shadowColor="#ff3030";ctx.shadowBlur=18;
+  const grad=ctx.createLinearGradient(x,y,x+w,y+h);grad.addColorStop(0,"#8b4a19");grad.addColorStop(.5,"#d28a35");grad.addColorStop(1,"#754016");
+  ctx.fillStyle=grad;ctx.fillRect(x+2,y+2,w-4,h-4);ctx.shadowBlur=0;
+  ctx.strokeStyle="#ffe0a0";ctx.lineWidth=4;ctx.strokeRect(x+4,y+4,w-8,h-8);
+  ctx.fillStyle="#512b13";ctx.fillRect(x+C,y+C, C, C);
+  ctx.fillStyle="#ff3030";ctx.font="bold 27px Arial";ctx.textAlign="center";ctx.fillText("⚔️",x+w/2,y+h/2+9);
+  ctx.restore();
+ });
+}
+if(apple){ctx.fillText(apple.emoji,Math.round(apple.x)*C+2,Math.round(apple.y)*C+24);}
+if(apple2){ctx.fillText(apple2.emoji,Math.round(apple2.x)*C+2,Math.round(apple2.y)*C+24);}
+function dot(p,color,r=11){
+ctx.fillStyle=color;ctx.beginPath();ctx.arc(p.x*C+15,p.y*C+15,r,0,Math.PI*2);ctx.fill();
+}
+if(mode==="duel"&&playing){
+const h=snake[0];
+const equippedWeapon=(data.selectedWeapon>=0&&data.weapons.includes(data.selectedWeapon))?weapons[data.selectedWeapon]:null;
+if(equippedWeapon){ctx.save();ctx.font="bold 22px Arial";ctx.textAlign="center";ctx.shadowColor="#ffffff";ctx.shadowBlur=8;ctx.fillText(equippedWeapon.emoji,h.x*C+15,h.y*C-9);ctx.restore();}
+ctx.save();
+ctx.translate(h.x*C+15,h.y*C+15);
+ctx.rotate(Math.atan2(dir.y,dir.x));
+ctx.fillStyle="#9aa7b5";
+ctx.fillRect(4,-5,20,10);
+ctx.fillStyle="#e0b35b";
+ctx.fillRect(9,3,7,9);
+ctx.fillStyle="#d6e0e9";
+ctx.fillRect(18,-3,7,6);
+ctx.restore();
+}
+function drawGlowSnake(body,color,label,skinIndex=data.skin,botWeapon=null){
+ if(!body||!body.length)return;
+ const skin=skins[skinIndex]||skins[0];
+ function partColor(i){
+  if(skin.color==="rainbow")return "hsl("+((tick*7+i*25)%360)+" 95% 58%)";
+  if(skin.color==="striped")return i%2?"#f4f4f4":"#343434";
+  if(skin.color==="tiger")return i%2?"#171717":"#ff9828";
+  return skin.color;
+ }
+ ctx.save();ctx.lineCap="round";ctx.lineJoin="round";
+ // جسم واحد متصل بحواف دائرية، مع الحفاظ على الفواصل عند الانتقال بين طرفي الخريطة.
+ for(let i=body.length-1;i>0;i--){
+  const a=body[i],b=body[i-1];
+  if(Math.abs(a.x-b.x)>1||Math.abs(a.y-b.y)>1)continue;
+  const ax=a.x*C+15,ay=a.y*C+15,bx=b.x*C+15,by=b.y*C+15;
+  ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(bx,by);
+  ctx.strokeStyle=partColor(i);ctx.lineWidth=21;ctx.shadowColor=partColor(i);ctx.shadowBlur=10;ctx.stroke();
+ }
+ for(let i=body.length-1;i>=1;i--){
+  const p=body[i],x=p.x*C+15,y=p.y*C+15;
+  ctx.beginPath();ctx.fillStyle=partColor(i);ctx.shadowColor=partColor(i);ctx.shadowBlur=9;ctx.arc(x,y,10.5,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0;ctx.strokeStyle="#ffffff66";ctx.lineWidth=2;ctx.beginPath();ctx.arc(x-2,y-3,5,Math.PI*1.08,Math.PI*1.82);ctx.stroke();
+ }
+ const h=body[0],x=h.x*C+15,y=h.y*C+15;
+ let dx=1,dy=0;if(body.length>1){dx=h.x-body[1].x;dy=h.y-body[1].y;if(Math.abs(dx)>1)dx=dx>0?-1:1;if(Math.abs(dy)>1)dy=dy>0?-1:1;}
+ const headColor=partColor(0);
+ ctx.beginPath();ctx.fillStyle=headColor;ctx.shadowColor=headColor;ctx.shadowBlur=16;ctx.arc(x,y,14,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+ // عينان كبيرتان بيضاوان وبؤبؤان أسودان، على جانبي اتجاه الحركة.
+ const px=-dy*5,py=dx*5,frontX=dx*2,frontY=dy*2;
+ for(const side of [-1,1]){
+  const ex=x+frontX+px*side,ey=y+frontY+py*side;
+  ctx.beginPath();ctx.fillStyle="#fff";ctx.shadowColor="#fff";ctx.shadowBlur=4;ctx.arc(ex,ey,4.2,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;
+  ctx.beginPath();ctx.fillStyle="#101820";ctx.arc(ex+dx*1.1,ey+dy*1.1,2,0,Math.PI*2);ctx.fill();
+ }
+ // سلاح البوت مرسوم أمام الفم وفي اتجاه نظره.
+ if(botWeapon!==null){
+  ctx.save();ctx.translate(x+dx*14,y+dy*14);ctx.rotate(Math.atan2(dy,dx));
+  ctx.fillStyle="#303b48";ctx.strokeStyle="#d6e0e9";ctx.lineWidth=1;
+  if(botWeapon===0){ // رشاش أطول
+   ctx.fillRect(0,-3,17,6);ctx.fillRect(5,3,4,7);ctx.fillRect(-4,-2,5,4);ctx.fillRect(14,-2,5,4);
+  }else{ // مسدس
+   ctx.fillRect(0,-3,12,6);ctx.fillRect(4,2,4,7);ctx.fillRect(10,-2,4,4);
+  }
+  ctx.restore();
+ }
+ ctx.fillStyle="#fff";ctx.font="bold 13px Arial";ctx.textAlign="center";ctx.fillText(label,x,y-22);ctx.restore();
+}
+drawGlowSnake(snake,"#ed2929",name1);
+bots.forEach(bot=>drawGlowSnake(bot.body,"#ed2929",bot.name||"Bot",bot.skin,bot.weapon));
+if(snake2.length)drawGlowSnake(snake2,"#ed2929",name2);
+ctx.fillStyle="#fff";ctx.font="13px Arial";ctx.textAlign="center";if(snake.length)ctx.fillText(name1,snake[0].x*C+15,snake[0].y*C-7);
+botShots.forEach(s=>{
+ ctx.save();ctx.fillStyle="#ff4b4b";ctx.shadowColor="#ff3030";ctx.shadowBlur=12;ctx.beginPath();ctx.arc(s.x*C+15,s.y*C+15,6,0,Math.PI*2);ctx.fill();ctx.restore();
+});
+shots.forEach(s=>{
+ const w=weapons[s.weapon]||weapons[0];
+ ctx.save();ctx.font="bold 24px Arial";ctx.textAlign="center";ctx.textBaseline="middle";
+ ctx.shadowColor="#ffd45a";ctx.shadowBlur=12;ctx.fillText(w.emoji,s.x*C+15,s.y*C+15);ctx.restore();
+});
+}
+$("endHomeBtn").addEventListener("click",()=>{$("endOverlay").style.display="none";$("game").style.display="none";$("home").style.display="flex";$("fire").style.display="none";updateCoins();});
+$("endRetryBtn").addEventListener("click",()=>startGame());
+$("playBtn").addEventListener("click",()=>{mode="classic";startGame();});
+$("homeBtn").addEventListener("click",()=>{
+stop();$("game").style.display="none";$("home").style.display="flex";$("fire").style.display="none";
+});
+$("pauseBtn").addEventListener("click",()=>{if(playing)stop();});
+$("resumeBtn").addEventListener("click",()=>{
+if(snake.length&&!playing){paused=false;playing=true;gameStartedAt=Date.now();clearInterval(loop);clearInterval(timerLoop);loop=setInterval(step,300);timerLoop=setInterval(updateTimer,250);$("message").textContent="";}
+});
+updateCoins();
+renderShop();
+})();
+</script>
+<script>
+if ("serviceWorker" in navigator) { window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(console.error)); }
+</script>
+</body>
+</html>
